@@ -1,45 +1,12 @@
-router.get("/webhook", (req, res) => {
-  const mode = req.query["hub.mode"];
-  const token = req.query["hub.verify_token"];
-  const challenge = req.query["hub.challenge"];
-
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ WEBHOOK VERIFIED");
-    return res.status(200).send(challenge);
-  }
-
-  console.log("❌ WEBHOOK FAILED");
-  return res.sendStatus(403);
-});
-
-
-
-// // ================== Webhook Verification ==================
-// router.get("/webhook", (req, res) => {
-//   const mode = req.query["hub.mode"];
-//   const token = req.query["hub.verify_token"];
-//   const challenge = req.query["hub.challenge"];
-
-//   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-//     console.log("✅ WEBHOOK VERIFIED");
-//     return res.status(200).send(challenge);
-//   }
-
-//   console.log("❌ WEBHOOK VERIFICATION FAILED");
-//   return res.sendStatus(403);
-// });
-
-
-
 // ================== Akola Police Cybercell WhatsApp Chatbot ==================
+require("dotenv").config();
 const express = require("express");
-const router = express.Router();
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { UserSession, Conversation } = require("./models");
 
-
+const router = express.Router();
 router.use(express.json());
 
 // ================== Database Schemas ==================
@@ -65,11 +32,10 @@ const conversationSchema = new mongoose.Schema({
 // ================== WhatsApp Cloud API Setup ==================
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_NUMBER_ID = process.env.PHONE_NUMBER_ID;
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
-//const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "CybercellVerify";
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN || "CybercellVerify";
 
 if (!WHATSAPP_TOKEN || !PHONE_NUMBER_ID) {
-  console.error("❌ Missing WhatsApp env vars");
+  console.error("❌ ERROR: WHATSAPP_TOKEN or PHONE_NUMBER_ID missing in .env");
   process.exit(1);
 }
 
@@ -1861,6 +1827,13 @@ router.post("/webhook", async (req, res) => {
       await sendInfoWithButtons(from, infoText, lang);
       return res.sendStatus(200);
     }
+    
+  } // <- track complaint closes here
+}
+
+  return res.sendStatus(200);
+
+} // <- session.awaitingInput closes here
 
     switch (msgId) {
       case "back_to_previous":
@@ -2043,25 +2016,14 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
-
-// ================== ROOT ==================
+// ================== Root Endpoint ==================
 router.get("/", (req, res) => {
   res.json({
     status: "🟢 Active",
     service: "Akola Police Cybercell WhatsApp Bot",
+    version: "6.4 - Navigation Fixed", // <-- MODIFIED
     timestamp: new Date().toISOString(),
   });
 });
-
-
-// // ================== Root Endpoint ==================
-// router.get("/", (req, res) => {
-//   res.json({
-//     status: "🟢 Active",
-//     service: "Akola Police Cybercell WhatsApp Bot",
-//     version: "6.4 - Navigation Fixed", // <-- MODIFIED
-//     timestamp: new Date().toISOString(),
-//   });
-// });
 
 module.exports = router;
